@@ -4,6 +4,7 @@
 import os
 from os import path as osp
 from typing import List, Tuple, Any, Union
+from vqasynth.utils.io import open, join_path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,7 +59,7 @@ class KittiDB:
         # Grab all the expected tokens.
         self._kitti_tokens = {}
         for split in splits:
-            split_dir = osp.join(self.root, split, 'image_2')
+            split_dir = join_path(self.root, split, 'image_2')
             _tokens = os.listdir(split_dir)
             _tokens = [t.replace('.png', '') for t in _tokens]
             _tokens.sort()
@@ -209,7 +210,7 @@ class KittiDB:
             filepath = None
             print('No cheating! The test set has no labels.')
         else:
-            filepath = osp.join(root, folder, table, '{}.{}'.format(filename, ending))
+            filepath = join_path(root, folder, table, '{}.{}'.format(filename, ending))
 
         return filepath
 

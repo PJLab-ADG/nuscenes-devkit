@@ -1,13 +1,13 @@
 # nuScenes dev-kit.
 # Code written by Holger Caesar, Caglayan Dicle, Varun Bankiti, and Alex Lang, 2019.
 
-import os
 from typing import Any, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 from pandas import DataFrame
 from pyquaternion import Quaternion
+from vqasynth.utils.io import join_path
 
 from nuscenes.eval.common.render import setup_axis
 from nuscenes.eval.tracking.data_classes import TrackingBox, TrackingMetricDataList
@@ -162,5 +162,5 @@ class TrackingRenderer:
         plt.ylim(-50, 50)
 
         # Save to disk and close figure.
-        fig.savefig(os.path.join(self.save_path, '{}.png'.format(timestamp)))
+        fig.savefig(join_path(self.save_path, '{}.png'.format(timestamp)))
         plt.close(fig)

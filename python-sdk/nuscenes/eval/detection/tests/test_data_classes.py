@@ -5,6 +5,8 @@ import json
 import os
 import unittest
 
+from vqasynth.utils.io import open, join_path
+
 from nuscenes.eval.common.data_classes import EvalBoxes
 from nuscenes.eval.detection.constants import TP_METRICS
 from nuscenes.eval.detection.data_classes import DetectionMetricData, DetectionConfig, DetectionMetrics, DetectionBox, \
@@ -18,7 +20,7 @@ class TestDetectionConfig(unittest.TestCase):
 
         this_dir = os.path.dirname(os.path.abspath(__file__))
         cfg_name = 'detection_cvpr_2019'
-        config_path = os.path.join(this_dir, '..', 'configs', cfg_name + '.json')
+        config_path = join_path(this_dir, '..', 'configs', cfg_name + '.json')
 
         with open(config_path) as f:
             cfg = json.load(f)

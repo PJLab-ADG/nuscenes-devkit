@@ -98,7 +98,7 @@ class PointCloud(ABC):
         current_sd_rec = nusc.get('sample_data', sample_data_token)
         for _ in range(nsweeps):
             # Load up the pointcloud and remove points close to the sensor.
-            current_pc = cls.from_file(osp.join(nusc.dataroot, current_sd_rec['filename']))
+            current_pc = cls.from_file(join_path(nusc.dataroot, current_sd_rec['filename']))
             current_pc.remove_close(min_distance)
 
             # Get past pose.

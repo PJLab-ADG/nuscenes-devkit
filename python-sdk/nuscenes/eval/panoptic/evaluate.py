@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 from typing import Any, Dict
+from vqasynth.utils.io import open, exists, join_path
 
 import numpy as np
 from nuscenes.eval.panoptic.panoptic_seg_evaluator import PanopticEval
@@ -71,8 +72,8 @@ class NuScenesPanopticEval:
         if task not in supported_tasks:
             raise ValueError(f'Supported task must be one of: {supported_tasks}, got: {task} !')
 
-        results_npz_folder = os.path.join(results_folder, 'panoptic', eval_set)
-        assert os.path.exists(results_npz_folder), \
+        results_npz_folder = join_path(results_folder, 'panoptic', eval_set)
+        assert exists(results_npz_folder), \
             f'Error: The folder containing the .npz files ({results_npz_folder}) does not exist.'
 
         self.nusc = nusc
@@ -105,7 +106,7 @@ class NuScenesPanopticEval:
                                                               ignore=[self.ignore_idx],
                                                               min_points=self.min_inst_points)
 
-        self.eval_result_file = os.path.join(self.out_dir, self.task + '-result.json')
+        self.eval_result_file = join_path(self.out_dir, self.task + '-result.json')
         if os.path.isfile(self.eval_result_file):
             os.remove(self.eval_result_file)
 
@@ -137,13 +138,13 @@ class NuScenesPanopticEval:
             sd_token = sample['data']['LIDAR_TOP']
 
             # Load the ground truth labels for the point cloud.
-            panoptic_label_filename = os.path.join(self.nusc.dataroot, self.nusc.get('panoptic', sd_token)['filename'])
+            panoptic_label_filename = join_path(self.nusc.dataroot, self.nusc.get('panoptic', sd_token)['filename'])
             panoptic_label = load_bin_file(panoptic_label_filename, type='panoptic')
 
             # Filter eval classes.
             label_sem = self.mapper.convert_label(panoptic_label // 1000)
             label_inst = panoptic_label
-            panoptic_pred_filename = os.path.join(self.results_folder, 'panoptic', self.eval_set,
+            panoptic_pred_filename = join_path(self.results_folder, 'panoptic', self.eval_set,
                                                   sd_token + '_panoptic.npz')
             panoptic_pred = load_bin_file(panoptic_pred_filename, type='panoptic')
             pred_sem = panoptic_pred // 1000
@@ -221,7 +222,7 @@ class NuScenesPanopticEval:
                 sd_token = cur_sample['data']['LIDAR_TOP']
 
                 # Load the ground truth labels for the point cloud, filter evaluation classes.
-                gt_label_file = os.path.join(self.nusc.dataroot, self.nusc.get('panoptic', sd_token)['filename'])
+                gt_label_file = join_path(self.nusc.dataroot, self.nusc.get('panoptic', sd_token)['filename'])
                 panoptic_label = load_bin_file(gt_label_file, type='panoptic')
                 label_sem.append(self.mapper.convert_label(panoptic_label // 1000))
                 label_sem = label_sem[-2:]
@@ -229,7 +230,7 @@ class NuScenesPanopticEval:
                 label_inst = label_inst[-2:]
 
                 # Load predictions for the point cloud, filter evaluation classes.
-                pred_file = os.path.join(self.results_folder, 'panoptic', self.eval_set, sd_token + '_panoptic.npz')
+                pred_file = join_path(self.results_folder, 'panoptic', self.eval_set, sd_token + '_panoptic.npz')
                 panoptic_pred = load_bin_file(pred_file, type='panoptic')
                 pred_sem.append(panoptic_pred // 1000)
                 pred_sem = pred_sem[-2:]
@@ -354,8 +355,8 @@ def main():
     out_dir = args.out_dir if args.out_dir is not None else f'Panoptic-nuScenes-{args.version}'
     task = args.task
     # Overwrite with task from submission.json if the file exists.
-    submission_file = os.path.join(args.result_path, args.eval_set, 'submission.json')
-    if os.path.exists(submission_file):
+    submission_file = join_path(args.result_path, args.eval_set, 'submission.json')
+    if exists(submission_file):
         print(submission_file)
         with open(submission_file, 'r') as f:
             data = json.load(f)

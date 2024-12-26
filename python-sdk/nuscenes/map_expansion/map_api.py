@@ -22,6 +22,7 @@ from pyquaternion import Quaternion
 from shapely import affinity
 from shapely.geometry import Polygon, MultiPolygon, LineString, Point, box
 from tqdm import tqdm
+from vqasynth.utils.io import open, join_path
 
 from nuscenes.map_expansion.arcline_path_utils import discretize_lane, ArcLinePath
 from nuscenes.map_expansion.bitmap import BitMap
@@ -87,7 +88,7 @@ class NuScenesMap:
         self.layer_names = self.geometric_layers + self.lookup_polygon_layers + self.non_geometric_line_layers
 
         # Load the selected map.
-        self.json_fname = os.path.join(self.dataroot, 'maps', 'expansion', '{}.json'.format(self.map_name))
+        self.json_fname = join_path(self.dataroot, 'maps', 'expansion', '{}.json'.format(self.map_name))
         with open(self.json_fname, 'r') as fh:
             self.json_obj = json.load(fh)
 

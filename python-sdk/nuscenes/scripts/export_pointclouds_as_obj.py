@@ -15,6 +15,7 @@ import numpy as np
 from PIL import Image
 from pyquaternion import Quaternion
 from tqdm import tqdm
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 from nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud
@@ -69,7 +70,7 @@ def export_scene_pointcloud(nusc: NuScenes,
             sample_rec = nusc.get('sample', sc_rec['sample_token'])
             lidar_token = sd_rec['token']
             lidar_rec = nusc.get('sample_data', lidar_token)
-            pc = LidarPointCloud.from_file(osp.join(nusc.dataroot, lidar_rec['filename']))
+            pc = LidarPointCloud.from_file(join_path(nusc.dataroot, lidar_rec['filename']))
 
             # Get point cloud colors.
             coloring = np.ones((3, pc.points.shape[1])) * -1
@@ -126,8 +127,8 @@ def pointcloud_color_from_image(nusc: NuScenes,
     cam = nusc.get('sample_data', camera_token)
     pointsensor = nusc.get('sample_data', pointsensor_token)
 
-    pc = LidarPointCloud.from_file(osp.join(nusc.dataroot, pointsensor['filename']))
-    im = Image.open(osp.join(nusc.dataroot, cam['filename']))
+    pc = LidarPointCloud.from_file(join_path(nusc.dataroot, pointsensor['filename']))
+    im = Image.open(join_path(nusc.dataroot, cam['filename']))
 
     # Points live in the point sensor frame. So they need to be transformed via global to the image plane.
     # First step: transform the pointcloud to the ego vehicle frame for the timestamp of the sweep.
@@ -189,15 +190,15 @@ if __name__ == '__main__':
     scene_name = args.scene
     verbose = bool(args.verbose)
 
-    out_path = osp.join(out_dir, '%s.obj' % scene_name)
-    if osp.exists(out_path):
+    out_path = join_path(out_dir, '%s.obj' % scene_name)
+    if exists(out_path):
         print('=> File {} already exists. Aborting.'.format(out_path))
         exit()
     else:
         print('=> Extracting scene {} to {}'.format(scene_name, out_path))
 
     # Create output folder
-    if not out_dir == '' and not osp.isdir(out_dir):
+    if not out_dir == '' and not isdir(out_dir):
         os.makedirs(out_dir)
 
     # Extract pointcloud for the specified scene

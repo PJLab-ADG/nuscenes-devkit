@@ -1,13 +1,13 @@
 # nuScenes dev-kit.
 # Code written by Qiang Xu and Oscar Beijbom, 2018.
 
-import os.path as osp
 from typing import Tuple, Any
 
 import cv2
 import numpy as np
 from PIL import Image
 from cachetools import cached, LRUCache
+from vqasynth.utils.io import exists
 
 # Set the maximum loadable image size.
 Image.MAX_IMAGE_PIXELS = 400000 * 400000
@@ -20,7 +20,7 @@ class MapMask:
         :param img_file: File path to map png file.
         :param resolution: Map resolution in meters.
         """
-        assert osp.exists(img_file), 'map mask {} does not exist'.format(img_file)
+        assert exists(img_file), 'map mask {} does not exist'.format(img_file)
         assert resolution >= 0.1, "Only supports down to 0.1 meter resolution."
         self.img_file = img_file
         self.resolution = resolution

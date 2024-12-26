@@ -11,6 +11,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from vqasynth.utils.io import join_path, isdir
+
 from nuscenes import NuScenes
 
 
@@ -21,13 +23,13 @@ def export_ego_poses(nusc: NuScenes, out_dir: str):
     locations = np.unique([log['location'] for log in nusc.log])
 
     # Create output directory
-    if not os.path.isdir(out_dir):
+    if not isdir(out_dir):
         os.makedirs(out_dir)
 
     for location in locations:
         print('Rendering map {}...'.format(location))
         nusc.render_egoposes_on_map(location)
-        out_path = os.path.join(out_dir, 'egoposes-{}.png'.format(location))
+        out_path = join_path(out_dir, 'egoposes-{}.png'.format(location))
         plt.tight_layout()
         plt.savefig(out_path)
 

@@ -44,6 +44,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from pyquaternion import Quaternion
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 from nuscenes.eval.detection.utils import category_to_detection_name
 from nuscenes.nuscenes import NuScenes
@@ -77,7 +78,7 @@ class KittiConverter:
         self.split = split
 
         # Create nusc_kitti_dir.
-        if not os.path.isdir(self.nusc_kitti_dir):
+        if not isdir(self.nusc_kitti_dir):
             os.makedirs(self.nusc_kitti_dir)
 
         # Select subset of the data to look at.
@@ -97,12 +98,12 @@ class KittiConverter:
         split_logs = create_splits_logs(self.split, self.nusc)
 
         # Create output folders.
-        label_folder = os.path.join(self.nusc_kitti_dir, self.split, 'label_2')
-        calib_folder = os.path.join(self.nusc_kitti_dir, self.split, 'calib')
-        image_folder = os.path.join(self.nusc_kitti_dir, self.split, 'image_2')
-        lidar_folder = os.path.join(self.nusc_kitti_dir, self.split, 'velodyne')
+        label_folder = join_path(self.nusc_kitti_dir, self.split, 'label_2')
+        calib_folder = join_path(self.nusc_kitti_dir, self.split, 'calib')
+        image_folder = join_path(self.nusc_kitti_dir, self.split, 'image_2')
+        lidar_folder = join_path(self.nusc_kitti_dir, self.split, 'velodyne')
         for folder in [label_folder, calib_folder, image_folder, lidar_folder]:
-            if not os.path.isdir(folder):
+            if not isdir(folder):
                 os.makedirs(folder)
 
         # Use only the samples from the current split.
@@ -160,16 +161,16 @@ class KittiConverter:
             token_idx += 1
 
             # Convert image (jpg to png).
-            src_im_path = os.path.join(self.nusc.dataroot, filename_cam_full)
-            dst_im_path = os.path.join(image_folder, sample_token + '.png')
-            if not os.path.exists(dst_im_path):
+            src_im_path = join_path(self.nusc.dataroot, filename_cam_full)
+            dst_im_path = join_path(image_folder, sample_token + '.png')
+            if not exists(dst_im_path):
                 im = Image.open(src_im_path)
                 im.save(dst_im_path, "PNG")
 
             # Convert lidar.
             # Note that we are only using a single sweep, instead of the commonly used n sweeps.
-            src_lid_path = os.path.join(self.nusc.dataroot, filename_lid_full)
-            dst_lid_path = os.path.join(lidar_folder, sample_token + '.bin')
+            src_lid_path = join_path(self.nusc.dataroot, filename_lid_full)
+            dst_lid_path = join_path(lidar_folder, sample_token + '.bin')
             assert not dst_lid_path.endswith('.pcd.bin')
             pcl = LidarPointCloud.from_file(src_lid_path)
             pcl.rotate(kitti_to_nu_lidar_inv.rotation_matrix)  # In KITTI lidar frame.
@@ -188,7 +189,7 @@ class KittiConverter:
             kitti_transforms['R0_rect'] = r0_rect.rotation_matrix  # Cameras are already rectified.
             kitti_transforms['Tr_velo_to_cam'] = np.hstack((velo_to_cam_rot, velo_to_cam_trans.reshape(3, 1)))
             kitti_transforms['Tr_imu_to_velo'] = imu_to_velo_kitti
-            calib_path = os.path.join(calib_folder, sample_token + '.txt')
+            calib_path = join_path(calib_folder, sample_token + '.txt')
             with open(calib_path, "w") as calib_file:
                 for (key, val) in kitti_transforms.items():
                     val = val.flatten()
@@ -198,8 +199,8 @@ class KittiConverter:
                     calib_file.write('%s: %s\n' % (key, val_str))
 
             # Write label file.
-            label_path = os.path.join(label_folder, sample_token + '.txt')
-            if os.path.exists(label_path):
+            label_path = join_path(label_folder, sample_token + '.txt')
+            if exists(label_path):
                 print('Skipping existing file: %s' % label_path)
                 continue
             else:
@@ -259,14 +260,14 @@ class KittiConverter:
         kitti = KittiDB(root=self.nusc_kitti_dir, splits=(self.split,))
 
         # Create output folder.
-        render_dir = os.path.join(self.nusc_kitti_dir, 'render')
-        if not os.path.isdir(render_dir):
+        render_dir = join_path(self.nusc_kitti_dir, 'render')
+        if not isdir(render_dir):
             os.mkdir(render_dir)
 
         # Render each image.
         for token in kitti.tokens[:self.image_count]:
             for sensor in ['lidar', 'camera']:
-                out_path = os.path.join(render_dir, '%s_%s.png' % (token, sensor))
+                out_path = join_path(render_dir, '%s_%s.png' % (token, sensor))
                 print('Rendering file to disk: %s' % out_path)
                 kitti.render_sample_data(token, sensor_modality=sensor, out_path=out_path, render_2d=render_2d)
                 plt.close()  # Close the windows to avoid a warning of too many open windows.
@@ -315,7 +316,7 @@ class KittiConverter:
             'meta': meta,
             'results': results
         }
-        submission_path = os.path.join(self.nusc_kitti_dir, 'submission.json')
+        submission_path = join_path(self.nusc_kitti_dir, 'submission.json')
         print('Writing submission to: %s' % submission_path)
         with open(submission_path, 'w') as f:
             json.dump(submission, f, indent=2)

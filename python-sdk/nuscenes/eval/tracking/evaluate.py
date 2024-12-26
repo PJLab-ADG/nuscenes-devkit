@@ -6,6 +6,7 @@ import json
 import os
 import time
 from typing import Tuple, List, Dict, Any
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 import numpy as np
 
@@ -73,13 +74,13 @@ class TrackingEval:
         self.render_classes = render_classes
 
         # Check result file exists.
-        assert os.path.exists(result_path), 'Error: The result file does not exist!'
+        assert exists(result_path), 'Error: The result file does not exist!'
 
         # Make dirs.
-        self.plot_dir = os.path.join(self.output_dir, 'plots')
-        if not os.path.isdir(self.output_dir):
+        self.plot_dir = join_path(self.output_dir, 'plots')
+        if not isdir(self.output_dir):
             os.makedirs(self.output_dir)
-        if not os.path.isdir(self.plot_dir):
+        if not isdir(self.plot_dir):
             os.makedirs(self.plot_dir)
 
         # Initialize NuScenes object.
@@ -202,7 +203,7 @@ class TrackingEval:
             print('Rendering curves')
 
         def savepath(name):
-            return os.path.join(self.plot_dir, name + '.pdf')
+            return join_path(self.plot_dir, name + '.pdf')
 
         # Plot a summary.
         summary_plot(self.cfg, md_list, savepath=savepath('summary'))
@@ -225,9 +226,9 @@ class TrackingEval:
             print('Saving metrics to: %s' % self.output_dir)
         metrics_summary = metrics.serialize()
         metrics_summary['meta'] = self.meta.copy()
-        with open(os.path.join(self.output_dir, 'metrics_summary.json'), 'w') as f:
+        with open(join_path(self.output_dir, 'metrics_summary.json'), 'w') as f:
             json.dump(metrics_summary, f, indent=2)
-        with open(os.path.join(self.output_dir, 'metrics_details.json'), 'w') as f:
+        with open(join_path(self.output_dir, 'metrics_details.json'), 'w') as f:
             json.dump(metric_data_list.serialize(), f, indent=2)
 
         # Print metrics to stdout.

@@ -11,6 +11,7 @@ import json
 import math
 import os
 from typing import List, Tuple, Dict
+from vqasynth.utils.io import open, exists
 
 from tqdm import tqdm
 
@@ -178,7 +179,7 @@ def main(dataroot: str, version: str, output_prefix: str, output_format: str = '
 
     # Create output directory if necessary.
     dest_dir = os.path.dirname(output_prefix)
-    if dest_dir != '' and not os.path.exists(dest_dir):
+    if dest_dir != '' and not exists(dest_dir):
         os.makedirs(dest_dir)
 
     # Write to json.

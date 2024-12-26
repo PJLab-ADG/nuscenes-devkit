@@ -5,6 +5,7 @@ import shutil
 
 import numpy as np
 from tqdm import tqdm
+from vqasynth.utils.io import open, exists, join_path
 
 from nuscenes import NuScenes
 from nuscenes.eval.lidarseg.utils import LidarsegClassMapper, get_samples_in_eval_set
@@ -41,18 +42,18 @@ def validate_submission(nusc: NuScenes,
         print('Checking if folder structure of {} is correct...'.format(results_folder))
 
     # Check that {results_folder}/{eval_set} exists.
-    results_meta_folder = os.path.join(results_folder, eval_set)
-    assert os.path.exists(results_meta_folder), \
+    results_meta_folder = join_path(results_folder, eval_set)
+    assert exists(results_meta_folder), \
         'Error: The folder containing the submission.json ({}) does not exist.'.format(results_meta_folder)
 
     # Check that {results_folder}/{eval_set}/submission.json exists.
-    submisson_json_path = os.path.join(results_meta_folder, 'submission.json')
-    assert os.path.exists(submisson_json_path), \
+    submisson_json_path = join_path(results_meta_folder, 'submission.json')
+    assert exists(submisson_json_path), \
         'Error: submission.json ({}) does not exist.'.format(submisson_json_path)
 
     # Check that {results_folder}/lidarseg/{eval_set} exists.
-    results_bin_folder = os.path.join(results_folder, 'lidarseg', eval_set)
-    assert os.path.exists(results_bin_folder), \
+    results_bin_folder = join_path(results_folder, 'lidarseg', eval_set)
+    assert exists(results_bin_folder), \
         'Error: The folder containing the .bin files ({}) does not exist.'.format(results_bin_folder)
 
     if verbose:
@@ -83,21 +84,21 @@ def validate_submission(nusc: NuScenes,
         sd_token = sample['data']['LIDAR_TOP']
 
         # Load the predictions for the point cloud.
-        lidarseg_pred_filename = os.path.join(results_bin_folder, sd_token + '_lidarseg.bin')
-        assert os.path.exists(lidarseg_pred_filename), \
+        lidarseg_pred_filename = join_path(results_bin_folder, sd_token + '_lidarseg.bin')
+        assert exists(lidarseg_pred_filename), \
             'Error: The prediction .bin file {} does not exist.'.format(lidarseg_pred_filename)
         lidarseg_pred = np.fromfile(lidarseg_pred_filename, dtype=np.uint8)
 
         # Check number of predictions for the point cloud.
         if len(nusc.lidarseg) > 0:  # If ground truth exists, compare the no. of predictions with that of ground truth.
-            lidarseg_label_filename = os.path.join(nusc.dataroot, nusc.get('lidarseg', sd_token)['filename'])
-            assert os.path.exists(lidarseg_label_filename), \
+            lidarseg_label_filename = join_path(nusc.dataroot, nusc.get('lidarseg', sd_token)['filename'])
+            assert exists(lidarseg_label_filename), \
                 'Error: The ground truth .bin file {} does not exist.'.format(lidarseg_label_filename)
             lidarseg_label = np.fromfile(lidarseg_label_filename, dtype=np.uint8)
             num_points = len(lidarseg_label)
         else:  # If no ground truth is available, compare the no. of predictions with that of points in a point cloud.
             pointsensor = nusc.get('sample_data', sd_token)
-            pcl_path = os.path.join(nusc.dataroot, pointsensor['filename'])
+            pcl_path = join_path(nusc.dataroot, pointsensor['filename'])
             pc = LidarPointCloud.from_file(pcl_path)
             points = pc.points
             num_points = points.shape[1]
@@ -119,10 +120,10 @@ def validate_submission(nusc: NuScenes,
 
     # Zip up results folder if desired.
     if zip_out:
-        assert os.path.exists(zip_out), \
+        assert exists(zip_out), \
             'Error: The folder {} to zip the results to does not exist.'.format(zip_out)
 
-        results_zip = os.path.join(zip_out, os.path.basename(os.path.normpath(results_folder)))
+        results_zip = join_path(zip_out, os.path.basename(os.path.normpath(results_folder)))
         results_zip_name = shutil.make_archive(results_zip, 'zip', results_folder)
         if verbose:
             print('Results folder {} zipped to {}'.format(results_folder, results_zip_name))

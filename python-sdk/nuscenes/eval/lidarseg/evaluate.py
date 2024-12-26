@@ -4,6 +4,7 @@ import os
 from typing import Dict
 
 from tqdm import tqdm
+from vqasynth.utils.io import exists, join_path
 
 from nuscenes import NuScenes
 from nuscenes.eval.lidarseg.utils import ConfusionMatrix, LidarsegClassMapper, get_samples_in_eval_set
@@ -50,8 +51,8 @@ class LidarSegEval:
 
         # Check results folder exists.
         self.results_folder = results_folder
-        self.results_bin_folder = os.path.join(results_folder, 'lidarseg', eval_set)
-        assert os.path.exists(self.results_bin_folder), \
+        self.results_bin_folder = join_path(results_folder, 'lidarseg', eval_set)
+        assert exists(self.results_bin_folder), \
             'Error: The folder containing the .bin files ({}) does not exist.'.format(self.results_bin_folder)
 
         self.nusc = nusc
@@ -85,14 +86,14 @@ class LidarSegEval:
             sd_token = sample['data']['LIDAR_TOP']
 
             # Load the ground truth labels for the point cloud.
-            lidarseg_label_filename = os.path.join(self.nusc.dataroot,
+            lidarseg_label_filename = join_path(self.nusc.dataroot,
                                                    self.nusc.get('lidarseg', sd_token)['filename'])
             lidarseg_label = load_bin_file(lidarseg_label_filename)
 
             lidarseg_label = self.mapper.convert_label(lidarseg_label)
 
             # Load the predictions for the point cloud.
-            lidarseg_pred_filename = os.path.join(self.results_folder, 'lidarseg',
+            lidarseg_pred_filename = join_path(self.results_folder, 'lidarseg',
                                                   self.eval_set, sd_token + '_lidarseg.bin')
             lidarseg_pred = load_bin_file(lidarseg_pred_filename)
 

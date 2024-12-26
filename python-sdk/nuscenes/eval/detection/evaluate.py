@@ -7,6 +7,7 @@ import os
 import random
 import time
 from typing import Any, Dict, List, Tuple
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 import numpy as np
 from nuscenes import NuScenes
@@ -77,13 +78,13 @@ class DetectionEval:
         self.cfg = config
 
         # Check result file exists.
-        assert os.path.exists(result_path), 'Error: The result file does not exist!'
+        assert exists(result_path), 'Error: The result file does not exist!'
 
         # Make dirs.
-        self.plot_dir = os.path.join(self.output_dir, 'plots')
-        if not os.path.isdir(self.output_dir):
+        self.plot_dir = join_path(self.output_dir, 'plots')
+        if not isdir(self.output_dir):
             os.makedirs(self.output_dir)
-        if not os.path.isdir(self.plot_dir):
+        if not isdir(self.plot_dir):
             os.makedirs(self.plot_dir)
 
         # Load data.
@@ -174,7 +175,7 @@ class DetectionEval:
             print('Rendering PR and TP curves')
 
         def savepath(name):
-            return os.path.join(self.plot_dir, name + '.pdf')
+            return join_path(self.plot_dir, name + '.pdf')
 
         summary_plot(md_list, metrics, min_precision=self.cfg.min_precision, min_recall=self.cfg.min_recall,
                      dist_th_tp=self.cfg.dist_th_tp, savepath=savepath('summary'))
@@ -207,8 +208,8 @@ class DetectionEval:
             sample_tokens = sample_tokens[:plot_examples]
 
             # Visualize samples.
-            example_dir = os.path.join(self.output_dir, 'examples')
-            if not os.path.isdir(example_dir):
+            example_dir = join_path(self.output_dir, 'examples')
+            if not isdir(example_dir):
                 os.mkdir(example_dir)
             for sample_token in sample_tokens:
                 visualize_sample(self.nusc,
@@ -217,7 +218,7 @@ class DetectionEval:
                                  # Don't render test GT.
                                  self.pred_boxes,
                                  eval_range=max(self.cfg.class_range.values()),
-                                 savepath=os.path.join(example_dir, '{}.png'.format(sample_token)))
+                                 savepath=join_path(example_dir, '{}.png'.format(sample_token)))
 
         # Run evaluation.
         metrics, metric_data_list = self.evaluate()
@@ -231,9 +232,9 @@ class DetectionEval:
             print('Saving metrics to: %s' % self.output_dir)
         metrics_summary = metrics.serialize()
         metrics_summary['meta'] = self.meta.copy()
-        with open(os.path.join(self.output_dir, 'metrics_summary.json'), 'w') as f:
+        with open(join_path(self.output_dir, 'metrics_summary.json'), 'w') as f:
             json.dump(metrics_summary, f, indent=2)
-        with open(os.path.join(self.output_dir, 'metrics_details.json'), 'w') as f:
+        with open(join_path(self.output_dir, 'metrics_details.json'), 'w') as f:
             json.dump(metric_data_list.serialize(), f, indent=2)
 
         # Print high-level metrics.

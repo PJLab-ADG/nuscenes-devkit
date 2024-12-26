@@ -23,6 +23,8 @@ try:
 except ModuleNotFoundError:
     raise unittest.SkipTest('Skipping test as pandas was not found!')
 
+from vqasynth.utils.io import join_path
+
 from nuscenes.eval.tracking.constants import MOT_METRIC_MAP, TRACKING_METRICS
 from nuscenes.eval.tracking.data_classes import TrackingBox, TrackingMetricData
 from nuscenes.eval.tracking.mot import MOTAccumulatorCustom
@@ -232,7 +234,7 @@ class TrackingEvaluation(object):
 
             # Visualize the boxes in this frame.
             if self.class_name in self.render_classes and threshold is None:
-                save_path = os.path.join(self.output_dir, 'render', str(scene_id), self.class_name)
+                save_path = join_path(self.output_dir, 'render', str(scene_id), self.class_name)
                 os.makedirs(save_path, exist_ok=True)
                 renderer = TrackingRenderer(save_path)
             else:

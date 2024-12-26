@@ -1,10 +1,10 @@
-import os
-from typing import Dict
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.transforms as mtrans
 import numpy as np
+
+from typing import Dict
+from vqasynth.utils.io import join_path
 
 from nuscenes import NuScenes
 from nuscenes.panoptic.panoptic_utils import get_frame_panoptic_instances, get_panoptic_instances_stats
@@ -176,7 +176,7 @@ def get_lidarseg_num_points_per_class(nusc: NuScenes, sort_by: str = 'count_desc
     lidarseg_counts = [0] * len(nusc.lidarseg_idx2name_mapping)
 
     for record_lidarseg in nusc.lidarseg:
-        lidarseg_labels_filename = os.path.join(nusc.dataroot, record_lidarseg['filename'])
+        lidarseg_labels_filename = join_path(nusc.dataroot, record_lidarseg['filename'])
 
         points_label = np.fromfile(lidarseg_labels_filename, dtype=np.uint8)
         indices = np.bincount(points_label)

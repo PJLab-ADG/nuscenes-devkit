@@ -5,6 +5,7 @@ import argparse
 import os
 
 from tqdm import tqdm
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 from nuimages import NuImages
 
@@ -18,8 +19,8 @@ def verify_setup(nuim: NuImages):
     # Check that each sample_data file exists.
     print('Checking that sample_data files are complete...')
     for sd in tqdm(nuim.sample_data):
-        file_path = os.path.join(nuim.dataroot, sd['filename'])
-        assert os.path.exists(file_path), 'Error: Missing sample_data at: %s' % file_path
+        file_path = join_path(nuim.dataroot, sd['filename'])
+        assert exists(file_path), 'Error: Missing sample_data at: %s' % file_path
 
 
 if __name__ == "__main__":

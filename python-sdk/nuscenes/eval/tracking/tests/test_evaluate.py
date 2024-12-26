@@ -9,6 +9,7 @@ import sys
 import unittest
 from typing import Any, Dict, List, Optional
 from unittest.mock import patch
+from vqasynth.utils.io import open, exists
 
 import numpy as np
 from nuscenes import NuScenes
@@ -33,11 +34,11 @@ class TestMain(unittest.TestCase):
             }, f, indent=2)
 
     def tearDown(self):
-        if os.path.exists(self.res_mockup):
+        if exists(self.res_mockup):
             os.remove(self.res_mockup)
-        if os.path.exists(self.res_eval_folder):
+        if exists(self.res_eval_folder):
             shutil.rmtree(self.res_eval_folder)
-        if os.path.exists(self.splits_file_mockup):
+        if exists(self.splits_file_mockup):
             os.remove(self.splits_file_mockup)
 
     @staticmethod

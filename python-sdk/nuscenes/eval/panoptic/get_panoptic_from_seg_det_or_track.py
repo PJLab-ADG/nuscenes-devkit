@@ -9,6 +9,7 @@ from typing import List, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
+from vqasynth.utils.io import join_path
 
 from nuscenes.eval.common.loaders import load_prediction, add_center_dist
 from nuscenes.eval.common.utils import boxes_to_sensor
@@ -52,8 +53,8 @@ def generate_panoptic_labels(nusc: NuScenes,
     if verbose:
         print(f'There are {num_samples} samples.')
 
-    panoptic_subdir = os.path.join('panoptic', eval_set)
-    panoptic_dir = os.path.join(out_dir, panoptic_subdir)
+    panoptic_subdir = join_path('panoptic', eval_set)
+    panoptic_dir = join_path(out_dir, panoptic_subdir)
     os.makedirs(panoptic_dir, exist_ok=True)
 
     box_type = TrackingBox if task == 'tracking' else DetectionBox
@@ -76,8 +77,8 @@ def generate_panoptic_labels(nusc: NuScenes,
         pose_record = nusc.get('ego_pose', sd_record['ego_pose_token'])
 
         # Load the predictions for the point cloud.
-        lidar_path = os.path.join(nusc.dataroot, sd_record['filename'])
-        lidarseg_pred_filename = os.path.join(lidarseg_preds_folder, 'lidarseg', nusc.version.split('-')[-1],
+        lidar_path = join_path(nusc.dataroot, sd_record['filename'])
+        lidarseg_pred_filename = join_path(lidarseg_preds_folder, 'lidarseg', nusc.version.split('-')[-1],
                                               sd_record['token'] + '_lidarseg.bin')
         lidar_seg = LidarSegPointCloud(lidar_path, lidarseg_pred_filename)
 
@@ -122,7 +123,7 @@ def generate_panoptic_labels(nusc: NuScenes,
         stuff_msk = np.logical_and(panop_labels == 0, lidar_seg.labels >= STUFF_START_COARSE_CLASS_ID)
         panop_labels[stuff_msk] = lidar_seg.labels[stuff_msk] * 1000
         panoptic_file = sd_record['token'] + '_panoptic.npz'
-        np.savez_compressed(os.path.join(panoptic_dir, panoptic_file), data=panop_labels.astype(np.uint16))
+        np.savez_compressed(join_path(panoptic_dir, panoptic_file), data=panop_labels.astype(np.uint16))
 
 
 def sort_confidence(boxes: List[Union[DetectionBox, TrackingBox]]) \

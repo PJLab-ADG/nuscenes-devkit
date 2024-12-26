@@ -4,6 +4,7 @@
 import json
 import os
 from typing import Dict, List
+from vqasynth.utils.io import open, exists, join_path
 
 from nuscenes import NuScenes
 
@@ -259,8 +260,8 @@ def get_scenes_of_custom_split(split_name: str, nusc : NuScenes) -> List[str]:
 def _get_custom_splits_file_path(nusc : NuScenes) -> str:
     """Use a separate function for this so we can mock it well in unit tests."""
 
-    splits_file_path: str = os.path.join(nusc.dataroot, nusc.version, "splits.json")
-    if (not os.path.exists(splits_file_path)) or (not os.path.isfile(splits_file_path)):
+    splits_file_path: str = join_path(nusc.dataroot, nusc.version, "splits.json")
+    if (not exists(splits_file_path)) or (not os.path.isfile(splits_file_path)):
         raise ValueError(f"Custom split requested, but no valid file found at {splits_file_path}.")
 
     return splits_file_path

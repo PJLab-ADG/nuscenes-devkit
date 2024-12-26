@@ -5,6 +5,7 @@ import json
 import os
 from itertools import chain
 from typing import List
+from vqasynth.utils.io import open, join_path
 
 from nuscenes.utils.splits import create_splits_scenes
 
@@ -26,7 +27,7 @@ def get_prediction_challenge_split(split: str, dataroot: str = '/data/sets/nusce
     else:
         split_name = split
 
-    path_to_file = os.path.join(dataroot, "maps", "prediction", "prediction_scenes.json")
+    path_to_file = join_path(dataroot, "maps", "prediction", "prediction_scenes.json")
     prediction_scenes = json.load(open(path_to_file, "r"))
     scenes = create_splits_scenes()
     scenes_for_split = scenes[split_name]

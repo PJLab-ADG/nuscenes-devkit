@@ -5,6 +5,7 @@ import argparse
 import os
 
 from tqdm import tqdm
+from vqasynth.utils.io import exists, join_path
 
 from nuscenes import NuScenes
 
@@ -17,14 +18,14 @@ def verify_setup(nusc: NuScenes):
     # Check that each sample_data file exists.
     print('Checking that sample_data files are complete...')
     for sd in tqdm(nusc.sample_data):
-        file_path = os.path.join(nusc.dataroot, sd['filename'])
-        assert os.path.exists(file_path), 'Error: Missing sample_data at: %s' % file_path
+        file_path = join_path(nusc.dataroot, sd['filename'])
+        assert exists(file_path), 'Error: Missing sample_data at: %s' % file_path
 
     # Check that each map file exists.
     print('Checking that map files are complete...')
     for map in tqdm(nusc.map):
-        file_path = os.path.join(nusc.dataroot, map['filename'])
-        assert os.path.exists(file_path), 'Error: Missing map at: %s' % file_path
+        file_path = join_path(nusc.dataroot, map['filename'])
+        assert exists(file_path), 'Error: Missing map at: %s' % file_path
 
 
 if __name__ == "__main__":

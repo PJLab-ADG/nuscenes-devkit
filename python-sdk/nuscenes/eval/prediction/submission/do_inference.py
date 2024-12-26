@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from typing import List, Any
+from vqasynth.utils.io import open, join_path
 
 from nuscenes import NuScenes
 from nuscenes.eval.prediction.config import PredictionConfig
@@ -64,7 +65,7 @@ def main(version: str, data_root: str, split_name: str, output_dir: str, submiss
 
     predictions = do_inference_for_submission(helper, config, dataset)
     predictions = [prediction.serialize() for prediction in predictions]
-    json.dump(predictions, open(os.path.join(output_dir, f"{submission_name}_inference.json"), "w"))
+    json.dump(predictions, open(join_path(output_dir, f"{submission_name}_inference.json"), "w"))
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ import json
 import os
 from collections import OrderedDict
 from typing import List, Tuple, Union
+from vqasynth.utils.io import open, exists, join_path
 
 import numpy as np
 from pyquaternion.quaternion import Quaternion
@@ -183,13 +184,13 @@ def main(args):
         reprojections.extend(reprojection_records)
 
     # Save to a .json file.
-    dest_path = os.path.join(args.dataroot, args.version)
-    if not os.path.exists(dest_path):
+    dest_path = join_path(args.dataroot, args.version)
+    if not exists(dest_path):
         os.makedirs(dest_path)
-    with open(os.path.join(args.dataroot, args.version, args.filename), 'w') as fh:
+    with open(join_path(args.dataroot, args.version, args.filename), 'w') as fh:
         json.dump(reprojections, fh, sort_keys=True, indent=4)
 
-    print("Saved the 2D re-projections under {}".format(os.path.join(args.dataroot, args.version, args.filename)))
+    print("Saved the 2D re-projections under {}".format(join_path(args.dataroot, args.version, args.filename)))
 
 
 if __name__ == '__main__':

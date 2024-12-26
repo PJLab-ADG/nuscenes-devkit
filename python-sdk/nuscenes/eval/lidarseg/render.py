@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 import numpy as np
 from tqdm import tqdm
+from vqasynth.utils.io import exists, join_path
 
 from nuscenes import NuScenes
 from nuscenes.eval.lidarseg.evaluate import LidarSegEval
@@ -36,7 +37,7 @@ class LidarSegEvalStratified(LidarSegEval):
         super().__init__(nusc, results_folder, eval_set, verbose)
 
         self.output_dir = output_dir
-        assert os.path.exists(self.output_dir), 'Error: {} does not exist.'.format(self.output_dir)
+        assert exists(self.output_dir), 'Error: {} does not exist.'.format(self.output_dir)
 
         self.strata_list = strata_list
         # Get the display names for each stratum (e.g. (40, 60) -> '40 to 60'; if the upper bound of a stratum is
@@ -77,15 +78,15 @@ class LidarSegEvalStratified(LidarSegEval):
                 # 1. Get the sample data token of the point cloud.
                 sd_token = sample['data']['LIDAR_TOP']
                 pointsensor = self.nusc.get('sample_data', sd_token)
-                pcl_path = os.path.join(self.nusc.dataroot, pointsensor['filename'])
+                pcl_path = join_path(self.nusc.dataroot, pointsensor['filename'])
 
                 # 2. Load the ground truth labels for the point cloud.
-                gt_path = os.path.join(self.nusc.dataroot, self.nusc.get('lidarseg', sd_token)['filename'])
+                gt_path = join_path(self.nusc.dataroot, self.nusc.get('lidarseg', sd_token)['filename'])
                 gt = LidarSegPointCloud(pcl_path, gt_path)
                 gt.labels = self.mapper.convert_label(gt.labels)  # Map the labels as necessary.
 
                 # 3. Load the predictions for the point cloud.
-                pred_path = os.path.join(self.results_folder, 'lidarseg', self.eval_set, sd_token + '_lidarseg.bin')
+                pred_path = join_path(self.results_folder, 'lidarseg', self.eval_set, sd_token + '_lidarseg.bin')
                 pred = LidarSegPointCloud(pcl_path, pred_path)
 
                 # 4. Filter to get only labels belonging to the stratum.
@@ -100,8 +101,8 @@ class LidarSegEvalStratified(LidarSegEval):
             print(json.dumps(self.stratified_per_class_metrics, indent=4))
 
         if self.output_dir:
-            self.render_stratified_per_class_metrics(os.path.join(self.output_dir, 'stratified_iou_per_class.png'))
-            self.render_stratified_overall_metrics(os.path.join(self.output_dir, 'stratified_iou_overall.png'))
+            self.render_stratified_per_class_metrics(join_path(self.output_dir, 'stratified_iou_per_class.png'))
+            self.render_stratified_overall_metrics(join_path(self.output_dir, 'stratified_iou_overall.png'))
 
     def render_stratified_overall_metrics(self, filename: str, dpi: int = 100) -> None:
         """
@@ -255,15 +256,15 @@ def visualize_semantic_differences_bev(nusc: NuScenes,
     # Get the sample data token of the point cloud.
     sd_token = sample['data']['LIDAR_TOP']
     pointsensor = nusc.get('sample_data', sd_token)
-    pcl_path = os.path.join(nusc.dataroot, pointsensor['filename'])
+    pcl_path = join_path(nusc.dataroot, pointsensor['filename'])
 
     # Load the ground truth labels for the point cloud.
-    gt_path = os.path.join(nusc.dataroot, nusc.get('lidarseg', sd_token)['filename'])
+    gt_path = join_path(nusc.dataroot, nusc.get('lidarseg', sd_token)['filename'])
     gt = LidarSegPointCloud(pcl_path, gt_path)
     gt.labels = mapper.convert_label(gt.labels)  # Map the labels as necessary.
 
     # Load the predictions for the point cloud.
-    preds_path = os.path.join(lidarseg_preds_folder, sd_token + '_lidarseg.bin')
+    preds_path = join_path(lidarseg_preds_folder, sd_token + '_lidarseg.bin')
     preds = LidarSegPointCloud(pcl_path, preds_path)
 
     # Do not compare points which are ignored.

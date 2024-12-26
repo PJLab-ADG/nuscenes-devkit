@@ -1,5 +1,6 @@
 import numpy as np
-import os
+
+from vqasynth.utils.io import exists
 
 
 def load_bin_file(bin_path: str, type: str = 'lidarseg') -> np.ndarray:
@@ -9,7 +10,7 @@ def load_bin_file(bin_path: str, type: str = 'lidarseg') -> np.ndarray:
     :param type: semantic type, 'lidarseg': stored in 8-bit format, 'panoptic': store in 32-bit format.
     :return: An array containing the labels, with dtype of np.uint8 for lidarseg and np.int32 for panoptic.
     """
-    assert os.path.exists(bin_path), 'Error: Unable to find {}.'.format(bin_path)
+    assert exists(bin_path), 'Error: Unable to find {}.'.format(bin_path)
     if type == 'lidarseg':
         bin_content = np.fromfile(bin_path, dtype=np.uint8)
     elif type == 'panoptic':

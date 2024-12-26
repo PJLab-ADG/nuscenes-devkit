@@ -4,6 +4,7 @@
 import json
 import os
 from typing import Union
+from vqasynth.utils.io import open, exists, join_path
 
 from nuscenes.eval.detection.data_classes import DetectionConfig
 from nuscenes.eval.tracking.data_classes import TrackingConfig
@@ -21,8 +22,8 @@ def config_factory(configuration_name: str) -> Union[DetectionConfig, TrackingCo
     assert len(tokens) > 1, 'Error: Configuration name must be have prefix "detection_" or "tracking_"!'
     task = tokens[0]
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    cfg_path = os.path.join(this_dir, '..', task, 'configs', '%s.json' % configuration_name)
-    assert os.path.exists(cfg_path), 'Requested unknown configuration {}'.format(configuration_name)
+    cfg_path = join_path(this_dir, '..', task, 'configs', '%s.json' % configuration_name)
+    assert exists(cfg_path), 'Requested unknown configuration {}'.format(configuration_name)
 
     # Load config file and deserialize it.
     with open(cfg_path, 'r') as f:

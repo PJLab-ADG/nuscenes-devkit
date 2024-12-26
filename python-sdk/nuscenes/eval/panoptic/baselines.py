@@ -8,6 +8,7 @@ import joblib
 import os
 import time
 from typing import List
+from vqasynth.utils.io import exists, join_path
 import zipfile
 
 from nuscenes.nuscenes import NuScenes
@@ -22,9 +23,9 @@ def prepare_files(method_names: List[str], root_dir: str) -> None:
     :param root_dir: The directory where the predictions of the various methods are stored at.
     """
     for method_name in method_names:
-        zip_path_to_predictions_by_method = os.path.join(root_dir, method_name + '.zip')
-        dir_path_to_predictions_by_method = os.path.join(root_dir, method_name)
-        assert os.path.exists(zip_path_to_predictions_by_method), 'Error: Zip file for method {} does not exist at {}.'\
+        zip_path_to_predictions_by_method = join_path(root_dir, method_name + '.zip')
+        dir_path_to_predictions_by_method = join_path(root_dir, method_name)
+        assert exists(zip_path_to_predictions_by_method), 'Error: Zip file for method {} does not exist at {}.'\
             .format(method_name, zip_path_to_predictions_by_method)
         zip_ref = zipfile.ZipFile(zip_path_to_predictions_by_method, 'r')
         zip_ref.extractall(dir_path_to_predictions_by_method)
@@ -42,8 +43,8 @@ def get_prediction_json_path(prediction_dir: str) -> str:
     files_in_dir = [f for f in files_in_dir if f.endswith('.json')]
     assert len(files_in_dir) == 1, 'Error: The submission .zip file must contain exactly one .json file.'
 
-    prediction_json_path = os.path.join(prediction_dir, files_in_dir[0])
-    assert os.path.exists(prediction_json_path), \
+    prediction_json_path = join_path(prediction_dir, files_in_dir[0])
+    assert exists(prediction_json_path), \
         'Error: JSON result file {} does not exist!'.format(prediction_json_path)
 
     return prediction_json_path
@@ -132,14 +133,14 @@ def generate_and_evaluate_baseline(out_dir: str,
     nusc = NuScenes(version=version, dataroot=dataroot, verbose=verbose)
     eval_set = nusc.version.split('-')[-1]
 
-    dir_to_save_panoptic_preds_to = os.path.join(out_dir, task, 'panoptic_predictions',
+    dir_to_save_panoptic_preds_to = join_path(out_dir, task, 'panoptic_predictions',
                                                  '{}_with_{}'.format(lidarseg_method_name, det_or_track_method_name))
     os.makedirs(dir_to_save_panoptic_preds_to, exist_ok=True)
 
-    dir_of_lidarseg_method_preds = os.path.join(lidarseg_preds_dir, lidarseg_method_name)
+    dir_of_lidarseg_method_preds = join_path(lidarseg_preds_dir, lidarseg_method_name)
 
     json_of_preds_by_det_or_track_method = get_prediction_json_path(
-        os.path.join(det_or_track_preds_dir, det_or_track_method_name))
+        join_path(det_or_track_preds_dir, det_or_track_method_name))
 
     generate_panoptic_labels(nusc,
                              dir_of_lidarseg_method_preds,
@@ -148,7 +149,7 @@ def generate_and_evaluate_baseline(out_dir: str,
                              task=task,
                              out_dir=dir_to_save_panoptic_preds_to)
 
-    dir_to_save_evaluation_results_to = os.path.join(out_dir, task, 'panoptic_eval_results', '{}_with_{}'.format(
+    dir_to_save_evaluation_results_to = join_path(out_dir, task, 'panoptic_eval_results', '{}_with_{}'.format(
         lidarseg_method_name, det_or_track_method_name))
     os.makedirs(dir_to_save_evaluation_results_to, exist_ok=True)
     dir_of_panoptic_preds = dir_to_save_panoptic_preds_to

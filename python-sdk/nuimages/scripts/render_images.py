@@ -7,6 +7,7 @@ import os
 import random
 from typing import List
 from collections import defaultdict
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 import cv2
 import tqdm
@@ -66,7 +67,7 @@ def render_images(nuim: NuImages,
 
     # Create output folder.
     out_dir = os.path.expanduser(out_dir)
-    if not os.path.isdir(out_dir):
+    if not isdir(out_dir):
         os.makedirs(out_dir)
 
     # Filter by camera.
@@ -131,7 +132,7 @@ def render_images(nuim: NuImages,
             continue
 
         for mode in modes:
-            out_path_prefix = os.path.join(out_dir, '%s_%s_%s_%s' % (log_name, sample_token, sample_cam_name, mode))
+            out_path_prefix = join_path(out_dir, '%s_%s_%s_%s' % (log_name, sample_token, sample_cam_name, mode))
             if out_type == 'image':
                 write_image(nuim, key_camera_token, mode, '%s.jpg' % out_path_prefix)
             elif out_type == 'video':

@@ -4,6 +4,8 @@
 import json
 import os
 
+from vqasynth.utils.io import open, exists, join_path
+
 from nuscenes.eval.detection.data_classes import DetectionConfig
 
 
@@ -17,8 +19,8 @@ def config_factory(configuration_name: str) -> DetectionConfig:
 
     # Check if config exists.
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    cfg_path = os.path.join(this_dir, 'configs', '%s.json' % configuration_name)
-    assert os.path.exists(cfg_path), \
+    cfg_path = join_path(this_dir, 'configs', '%s.json' % configuration_name)
+    assert exists(cfg_path), \
         'Requested unknown configuration {}'.format(configuration_name)
 
     # Load config file and deserialize it.

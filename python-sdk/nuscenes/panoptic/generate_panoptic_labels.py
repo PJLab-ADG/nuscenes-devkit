@@ -13,6 +13,7 @@ from shutil import copyfile
 
 import numpy as np
 from tqdm import tqdm
+from vqasynth.utils.io import open, join_path
 
 from nuscenes.nuscenes import NuScenes
 from nuscenes.panoptic.panoptic_utils import STUFF_START_CLASS_ID
@@ -35,8 +36,8 @@ def generate_panoptic_labels(nusc: NuScenes, out_dir: str, verbose: bool = False
         print(f'There are {num_samples} samples.')
 
     # Make output directory.
-    panoptic_subdir = os.path.join('panoptic', nusc.version)
-    panoptic_dir = os.path.join(out_dir, panoptic_subdir)
+    panoptic_subdir = join_path('panoptic', nusc.version)
+    panoptic_dir = join_path(out_dir, panoptic_subdir)
     os.makedirs(panoptic_dir, exist_ok=True)
 
     panoptic_json = []
@@ -47,8 +48,8 @@ def generate_panoptic_labels(nusc: NuScenes, out_dir: str, verbose: bool = False
         if scene_token not in inst_tok2id:
             inst_tok2id[scene_token] = {}
         lidar_token = curr_sample['data']['LIDAR_TOP']
-        point_path = os.path.join(nusc.dataroot, nusc.get('sample_data', lidar_token)['filename'])
-        label_path = os.path.join(nusc.dataroot, nusc.get('lidarseg', lidar_token)['filename'])
+        point_path = join_path(nusc.dataroot, nusc.get('sample_data', lidar_token)['filename'])
+        label_path = join_path(nusc.dataroot, nusc.get('lidarseg', lidar_token)['filename'])
         lidar_seg = LidarSegPointCloud(point_path, label_path)
         # panoptic labels will be set as 1000 * category_index + instance_id, instance_id will be [1, 2, 3, ...] within
         # each thing category, these points fall within more than 1 bounding boxes will have instance_id = 0.
@@ -87,21 +88,21 @@ def generate_panoptic_labels(nusc: NuScenes, out_dir: str, verbose: bool = False
         panoptic_json.append({
             "token": lidar_token,
             "sample_data_token": lidar_token,
-            "filename": os.path.join(panoptic_subdir, panoptic_file),
+            "filename": join_path(panoptic_subdir, panoptic_file),
         })
-        np.savez_compressed(os.path.join(panoptic_dir, panoptic_file), data=panop_labels.astype(np.uint16))
+        np.savez_compressed(join_path(panoptic_dir, panoptic_file), data=panop_labels.astype(np.uint16))
 
     # Write the panoptic table.
-    meta_dir = os.path.join(out_dir, nusc.version)
+    meta_dir = join_path(out_dir, nusc.version)
     os.makedirs(meta_dir, exist_ok=True)
-    json_file = os.path.join(meta_dir, 'panoptic.json')
+    json_file = join_path(meta_dir, 'panoptic.json')
     with open(json_file, 'w') as f:
         json.dump(panoptic_json, f, indent=2)
 
     # Copy category.json from lidarseg.
-    category_dst_path = os.path.join(meta_dir, 'category.json')
+    category_dst_path = join_path(meta_dir, 'category.json')
     if not os.path.isfile(category_dst_path):
-        category_src_path = os.path.join(nusc.dataroot, nusc.version, 'category.json')
+        category_src_path = join_path(nusc.dataroot, nusc.version, 'category.json')
         copyfile(category_src_path, category_dst_path)
 
 

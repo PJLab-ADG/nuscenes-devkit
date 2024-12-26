@@ -2,7 +2,6 @@
 # Code written by Asha Asvathaman & Holger Caesar, 2020.
 
 import json
-import os.path as osp
 import sys
 import time
 from collections import defaultdict
@@ -12,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageDraw
 from pyquaternion import Quaternion
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 from nuimages.utils.utils import annotation_name, mask_decode, get_font, name_to_index_mapping
 from nuscenes.utils.color_map import get_colormap
@@ -47,7 +47,7 @@ class NuImages:
         self.table_names = ['attribute', 'calibrated_sensor', 'category', 'ego_pose', 'log', 'object_ann', 'sample',
                             'sample_data', 'sensor', 'surface_ann']
 
-        assert osp.exists(self.table_root), 'Database version not found: {}'.format(self.table_root)
+        assert exists(self.table_root), 'Database version not found: {}'.format(self.table_root)
 
         start_time = time.time()
         if verbose:
@@ -121,7 +121,7 @@ class NuImages:
         """
         Returns the folder where the tables are stored for the relevant version.
         """
-        return osp.join(self.dataroot, self.version)
+        return join_path(self.dataroot, self.version)
 
     def load_tables(self, table_names: List[str]) -> None:
         """
@@ -152,8 +152,8 @@ class NuImages:
         :return: The table dictionary.
         """
         start_time = time.time()
-        table_path = osp.join(self.table_root, '{}.json'.format(table_name))
-        assert osp.exists(table_path), 'Error: Table %s does not exist!' % table_name
+        table_path = join_path(self.table_root, '{}.json'.format(table_name))
+        assert exists(table_path), 'Error: Table %s does not exist!' % table_name
         with open(table_path) as f:
             table = json.load(f)
         end_time = time.time()
@@ -197,8 +197,8 @@ class NuImages:
             'Error: You passed an incorrect filename to check_sweeps(). Please use sample_data[''filename''].'
 
         if 'sweeps' in filename:
-            sweeps_dir = osp.join(self.dataroot, 'sweeps')
-            if not osp.isdir(sweeps_dir):
+            sweeps_dir = join_path(self.dataroot, 'sweeps')
+            if not isdir(sweeps_dir):
                 raise Exception('Error: You are missing the "%s" directory! The devkit generally works without this '
                                 'directory, but you cannot call methods that use non-keyframe sample_datas.'
                                 % sweeps_dir)
@@ -560,7 +560,7 @@ class NuImages:
 
         # Get image data.
         self.check_sweeps(sample_data['filename'])
-        im_path = osp.join(self.dataroot, sample_data['filename'])
+        im_path = join_path(self.dataroot, sample_data['filename'])
         im = Image.open(im_path)
 
         (width, height) = im.size
@@ -650,7 +650,7 @@ class NuImages:
 
         # Get image data.
         self.check_sweeps(sample_data['filename'])
-        im_path = osp.join(self.dataroot, sample_data['filename'])
+        im_path = join_path(self.dataroot, sample_data['filename'])
         im = Image.open(im_path)
 
         # Initialize drawing.

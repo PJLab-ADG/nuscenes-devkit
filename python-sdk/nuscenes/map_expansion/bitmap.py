@@ -1,5 +1,5 @@
-import os
 from typing import Tuple, Any
+from vqasynth.utils.io import exists, join_path
 
 import numpy as np
 from PIL import Image
@@ -33,7 +33,7 @@ class BitMap:
         """
         # Load bitmap.
         if self.layer_name == 'basemap':
-            map_path = os.path.join(self.dataroot, 'maps', 'basemap', self.map_name + '.png')
+            map_path = join_path(self.dataroot, 'maps', 'basemap', self.map_name + '.png')
         elif self.layer_name == 'semantic_prior':
             map_hashes = {
                 'singapore-onenorth': '53992ee3023e5494b90c316c183be829',
@@ -42,12 +42,12 @@ class BitMap:
                 'boston-seaport': '36092f0b03a857c6a3403e25b4b7aab3'
             }
             map_hash = map_hashes[self.map_name]
-            map_path = os.path.join(self.dataroot, 'maps', map_hash + '.png')
+            map_path = join_path(self.dataroot, 'maps', map_hash + '.png')
         else:
             raise Exception('Error: Invalid bitmap layer: %s' % self.layer_name)
 
         # Convert to numpy.
-        if os.path.exists(map_path):
+        if exists(map_path):
             image = np.array(Image.open(map_path))
         else:
             raise Exception('Error: Cannot find %s %s! Please make sure that the map is correctly installed.'

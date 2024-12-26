@@ -4,6 +4,8 @@
 import os
 import unittest
 
+from vqasynth.utils.io import join_path
+
 from nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud, RadarPointCloud
 
@@ -20,8 +22,8 @@ class TestDataClasses(unittest.TestCase):
         sample_rec = nusc.sample[0]
         lidar_name = nusc.get('sample_data', sample_rec['data']['LIDAR_TOP'])['filename']
         radar_name = nusc.get('sample_data', sample_rec['data']['RADAR_FRONT'])['filename']
-        lidar_path = os.path.join(dataroot, lidar_name)
-        radar_path = os.path.join(dataroot, radar_name)
+        lidar_path = join_path(dataroot, lidar_name)
+        radar_path = join_path(dataroot, radar_name)
         pc1 = LidarPointCloud.from_file(lidar_path)
         pc2 = RadarPointCloud.from_file(radar_path)
         pc3, _ = LidarPointCloud.from_file_multisweep(nusc, sample_rec, 'LIDAR_TOP', 'LIDAR_TOP', nsweeps=2)

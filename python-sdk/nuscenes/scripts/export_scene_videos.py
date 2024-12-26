@@ -8,6 +8,8 @@ Exports a video of each scene (with annotations) to disk.
 import argparse
 import os
 
+from vqasynth.utils.io import exists, join_path, isdir
+
 from nuscenes import NuScenes
 
 
@@ -18,15 +20,15 @@ def export_videos(nusc: NuScenes, out_dir: str):
     scene_tokens = [s['token'] for s in nusc.scene]
 
     # Create output directory
-    if not os.path.isdir(out_dir):
+    if not isdir(out_dir):
         os.makedirs(out_dir)
 
     # Write videos to disk
     for scene_token in scene_tokens:
         scene = nusc.get('scene', scene_token)
         print('Writing scene %s' % scene['name'])
-        out_path = os.path.join(out_dir, scene['name']) + '.avi'
-        if not os.path.exists(out_path):
+        out_path = join_path(out_dir, scene['name']) + '.avi'
+        if not exists(out_path):
             nusc.render_scene(scene['token'], out_path=out_path)
 
 

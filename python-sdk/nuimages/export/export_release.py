@@ -6,6 +6,7 @@ import os
 import json
 import tarfile
 from typing import List
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 
 def export_release(dataroot='/data/sets/nuimages', version: str = 'v1.0') -> None:
@@ -15,13 +16,13 @@ def export_release(dataroot='/data/sets/nuimages', version: str = 'v1.0') -> Non
     :param version: The nuImages dataset version.
     """
     # Create export folder.
-    export_dir = os.path.join(dataroot, 'export')
-    if not os.path.isdir(export_dir):
+    export_dir = join_path(dataroot, 'export')
+    if not isdir(export_dir):
         os.makedirs(export_dir)
 
     # Determine the images from the mini split.
-    mini_src = os.path.join(dataroot, version + '-mini')
-    with open(os.path.join(mini_src, 'sample_data.json'), 'r') as f:
+    mini_src = join_path(dataroot, version + '-mini')
+    with open(join_path(mini_src, 'sample_data.json'), 'r') as f:
         sample_data = json.load(f)
     file_names = [sd['filename'] for sd in sample_data]
 
@@ -40,8 +41,8 @@ def export_release(dataroot='/data/sets/nuimages', version: str = 'v1.0') -> Non
 
     # Pack each folder.
     for key, folder_list in archives.items():
-        out_path = os.path.join(export_dir, 'nuimages-%s-%s.tgz' % (version, key))
-        if os.path.exists(out_path):
+        out_path = join_path(export_dir, 'nuimages-%s-%s.tgz' % (version, key))
+        if exists(out_path):
             print('Warning: Skipping export for file as it already exists: %s' % out_path)
             continue
         print('Compressing archive %s...' % out_path)
@@ -57,7 +58,7 @@ def pack_folder(out_path: str, dataroot: str, folder_list: List[str], tar_format
     """
     tar = tarfile.open(out_path, tar_format)
     for name in folder_list:
-        folder_path = os.path.join(dataroot, name)
+        folder_path = join_path(dataroot, name)
         tar.add(folder_path, arcname=name)
     tar.close()
 

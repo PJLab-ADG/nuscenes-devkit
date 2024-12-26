@@ -17,6 +17,7 @@ import pathlib
 from collections import defaultdict
 from shutil import rmtree
 from typing import List, Tuple
+from vqasynth.utils.io import open, exists, join_path
 
 import cv2
 import numpy as np
@@ -199,7 +200,7 @@ def get_cropped_image_for_annotation(sample_data_annotation: dict,
     :param output_size: A tuple for the image size.
     :return: The cropped image.
     """
-    data_path = os.path.join(dataroot,
+    data_path = join_path(dataroot,
                              sample_data_annotation['filename'])
     bbox = sample_data_annotation['bbox_corners']
     im = Image.open(data_path)
@@ -318,8 +319,8 @@ def main(version: str,
     print('\t* Minimum visibility: {}'.format(visibility))
 
     # ================================ Load image annotations. ========================================
-    image_annotations_file = os.path.join(dataroot, version, 'image_annotations.json')
-    if not os.path.exists(image_annotations_file):
+    image_annotations_file = join_path(dataroot, version, 'image_annotations.json')
+    if not exists(image_annotations_file):
         raise Exception("Error: Missing image_annotations.json. "
                         "Please run the export_2d_annotations_as_json.py script.")
     with open(image_annotations_file) as f:
@@ -371,7 +372,7 @@ def main(version: str,
 
         # Define codec and file extension.
         file_ext = 'mp4' if codec == 'vp09' else 'avi'
-        video_path = os.path.join(
+        video_path = join_path(
             output, '{}.{}'.format(instance_token, file_ext))
         out = cv2.VideoWriter(
             video_path, cv2.VideoWriter_fourcc(*codec), fps, output_size)

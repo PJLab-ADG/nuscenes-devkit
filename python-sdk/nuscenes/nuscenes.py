@@ -4,7 +4,6 @@
 import json
 import math
 import os
-import os.path as osp
 import sys
 import time
 from datetime import datetime
@@ -19,6 +18,7 @@ from matplotlib import rcParams
 from matplotlib.axes import Axes
 from pyquaternion import Quaternion
 from tqdm import tqdm
+from vqasynth.utils.io import open, exists, join_path, isdir
 
 from nuscenes.lidarseg.lidarseg_utils import colormap_to_colors, plt_to_cv2, get_stats, \
     get_labels_in_coloring, create_lidarseg_legend, paint_points_label
@@ -59,7 +59,7 @@ class NuScenes:
         self.table_names = ['category', 'attribute', 'visibility', 'instance', 'sensor', 'calibrated_sensor',
                             'ego_pose', 'log', 'scene', 'sample', 'sample_data', 'sample_annotation', 'map']
 
-        assert osp.exists(self.table_root), 'Database version not found: {}'.format(self.table_root)
+        assert exists(self.table_root), 'Database version not found: {}'.format(self.table_root)
 
         start_time = time.time()
         if verbose:
@@ -83,7 +83,7 @@ class NuScenes:
         # Initialize the colormap which maps from class names to RGB values.
         self.colormap = get_colormap()
 
-        lidar_tasks = [t for t in ['lidarseg', 'panoptic'] if osp.exists(osp.join(self.table_root, t + '.json'))]
+        lidar_tasks = [t for t in ['lidarseg', 'panoptic'] if exists(join_path(self.table_root, t + '.json'))]
         if len(lidar_tasks) > 0:
             self.lidarseg_idx2name_mapping = dict()
             self.lidarseg_name2idx_mapping = dict()
@@ -97,7 +97,7 @@ class NuScenes:
                 self.panoptic = self.__load_table__(lidar_task)
 
             setattr(self, lidar_task, self.__load_table__(lidar_task))
-            label_files = os.listdir(os.path.join(self.dataroot, lidar_task, self.version))
+            label_files = os.listdir(join_path(self.dataroot, lidar_task, self.version))
             num_label_files = len([name for name in label_files if (name.endswith('.bin') or name.endswith('.npz'))])
             num_lidarseg_recs = len(getattr(self, lidar_task))
             assert num_lidarseg_recs == num_label_files, \
@@ -108,12 +108,12 @@ class NuScenes:
                                   for c in sorted(self.category, key=lambda k: k['index'])})
 
         # If available, also load the image_annotations table created by export_2d_annotations_as_json().
-        if osp.exists(osp.join(self.table_root, 'image_annotations.json')):
+        if exists(join_path(self.table_root, 'image_annotations.json')):
             self.image_annotations = self.__load_table__('image_annotations')
 
         # Initialize map mask for each map record.
         for map_record in self.map:
-            map_record['mask'] = MapMask(osp.join(self.dataroot, map_record['filename']), resolution=map_resolution)
+            map_record['mask'] = MapMask(join_path(self.dataroot, map_record['filename']), resolution=map_resolution)
 
         if verbose:
             for table in self.table_names:
@@ -129,11 +129,11 @@ class NuScenes:
     @property
     def table_root(self) -> str:
         """ Returns the folder where the tables are stored for the relevant version. """
-        return osp.join(self.dataroot, self.version)
+        return join_path(self.dataroot, self.version)
 
     def __load_table__(self, table_name) -> dict:
         """ Loads a table. """
-        with open(osp.join(self.table_root, '{}.json'.format(table_name))) as f:
+        with open(join_path(self.table_root, '{}.json'.format(table_name))) as f:
             table = json.load(f)
         return table
 
@@ -243,7 +243,7 @@ class NuScenes:
         """ Returns the path to a sample_data. """
 
         sd_record = self.get('sample_data', sample_data_token)
-        return osp.join(self.dataroot, sd_record['filename'])
+        return join_path(self.dataroot, sd_record['filename'])
 
     def get_sample_data(self, sample_data_token: str,
                         box_vis_level: BoxVisibility = BoxVisibility.ANY,
@@ -454,7 +454,7 @@ class NuScenes:
 
         if lidarseg_preds_bin_path:
             lidarseg_labels_filename = lidarseg_preds_bin_path
-            assert os.path.exists(lidarseg_labels_filename), \
+            assert exists(lidarseg_labels_filename), \
                 'Error: Unable to find {} to load the predictions for sample token {} ' \
                 '(lidar sample data token {}) from.'.format(lidarseg_labels_filename, sample_token, ref_sd_token)
 
@@ -465,7 +465,7 @@ class NuScenes:
                                             ' for your predictions, pass a path to the appropriate .bin/npz file using'\
                                             ' the lidarseg_preds_bin_path argument.'.format(gt_from, self.version)
             lidar_sd_token = self.get('sample', sample_token)['data']['LIDAR_TOP']
-            lidarseg_labels_filename = os.path.join(self.dataroot,
+            lidarseg_labels_filename = join_path(self.dataroot,
                                                     self.get(gt_from, lidar_sd_token)['filename'])
 
             header = '===== Statistics for ' + sample_token + ' ====='
@@ -692,7 +692,7 @@ class NuScenesExplorer:
         lidarseg_counts = [0] * len(self.nusc.lidarseg_idx2name_mapping)
 
         for record_lidarseg in semantic_table:
-            lidarseg_labels_filename = osp.join(self.nusc.dataroot, record_lidarseg['filename'])
+            lidarseg_labels_filename = join_path(self.nusc.dataroot, record_lidarseg['filename'])
             points_label = load_bin_file(lidarseg_labels_filename, type=gt_from)
             if gt_from == 'panoptic':
                 points_label = panoptic_to_lidarseg(points_label)
@@ -744,7 +744,7 @@ class NuScenesExplorer:
         # {scene_token: np.ndarray((n, 5), np.int32)}, each row: (scene_id, frame_id, category_id, inst_id, num_points).
         scene_inst_stats = dict()
         for frame_id, record_panoptic in enumerate(nusc_panoptic):
-            panoptic_label_filename = osp.join(self.nusc.dataroot, record_panoptic['filename'])
+            panoptic_label_filename = join_path(self.nusc.dataroot, record_panoptic['filename'])
             panoptic_label = load_bin_file(panoptic_label_filename, type='panoptic')
             sample_token = self.nusc.get('sample_data', record_panoptic['sample_data_token'])['sample_token']
             scene_token = self.nusc.get('sample', sample_token)['scene_token']
@@ -860,7 +860,7 @@ class NuScenesExplorer:
 
         cam = self.nusc.get('sample_data', camera_token)
         pointsensor = self.nusc.get('sample_data', pointsensor_token)
-        pcl_path = osp.join(self.nusc.dataroot, pointsensor['filename'])
+        pcl_path = join_path(self.nusc.dataroot, pointsensor['filename'])
         if pointsensor['sensor_modality'] == 'lidar':
             if show_lidarseg or show_panoptic:
                 gt_from = 'lidarseg' if show_lidarseg else 'panoptic'
@@ -876,7 +876,7 @@ class NuScenesExplorer:
             pc = LidarPointCloud.from_file(pcl_path)
         else:
             pc = RadarPointCloud.from_file(pcl_path)
-        im = Image.open(osp.join(self.nusc.dataroot, cam['filename']))
+        im = Image.open(join_path(self.nusc.dataroot, cam['filename']))
 
         # Points live in the point sensor frame. So they need to be transformed via global to the image plane.
         # First step: transform the pointcloud to the ego vehicle frame for the timestamp of the sweep.
@@ -923,12 +923,12 @@ class NuScenesExplorer:
             if lidarseg_preds_bin_path:
                 sample_token = self.nusc.get('sample_data', pointsensor_token)['sample_token']
                 lidarseg_labels_filename = lidarseg_preds_bin_path
-                assert os.path.exists(lidarseg_labels_filename), \
+                assert exists(lidarseg_labels_filename), \
                     'Error: Unable to find {} to load the predictions for sample token {} (lidar ' \
                     'sample data token {}) from.'.format(lidarseg_labels_filename, sample_token, pointsensor_token)
             else:
                 if len(semantic_table) > 0:  # Ensure {lidarseg/panoptic}.json is not empty (e.g. in case of v1.0-test).
-                    lidarseg_labels_filename = osp.join(self.nusc.dataroot,
+                    lidarseg_labels_filename = join_path(self.nusc.dataroot,
                                                         self.nusc.get(gt_from, pointsensor_token)['filename'])
                 else:
                     lidarseg_labels_filename = None
@@ -1286,7 +1286,7 @@ class NuScenesExplorer:
                         'be set to 1.'
 
                     # Load a single lidar point cloud.
-                    pcl_path = osp.join(self.nusc.dataroot, ref_sd_record['filename'])
+                    pcl_path = join_path(self.nusc.dataroot, ref_sd_record['filename'])
                     pc = LidarPointCloud.from_file(pcl_path)
                 else:
                     # Get aggregated lidar point cloud in lidar frame.
@@ -1350,13 +1350,13 @@ class NuScenesExplorer:
                 if lidarseg_preds_bin_path:
                     sample_token = self.nusc.get('sample_data', sample_data_token)['sample_token']
                     lidarseg_labels_filename = lidarseg_preds_bin_path
-                    assert os.path.exists(lidarseg_labels_filename), \
+                    assert exists(lidarseg_labels_filename), \
                         'Error: Unable to find {} to load the predictions for sample token {} (lidar ' \
                         'sample data token {}) from.'.format(lidarseg_labels_filename, sample_token, sample_data_token)
                 else:
                     if len(semantic_table) > 0:
                         # Ensure {lidarseg/panoptic}.json is not empty (e.g. in case of v1.0-test).
-                        lidarseg_labels_filename = osp.join(self.nusc.dataroot,
+                        lidarseg_labels_filename = join_path(self.nusc.dataroot,
                                                             self.nusc.get(gt_from, sample_data_token)['filename'])
                     else:
                         lidarseg_labels_filename = None
@@ -1605,7 +1605,7 @@ class NuScenesExplorer:
         assert imsize[0] / imsize[1] == 16 / 9, "Aspect ratio should be 16/9."
 
         if out_path is not None:
-            assert osp.splitext(out_path)[-1] == '.avi'
+            assert os.path.splitext(out_path)[-1] == '.avi'
 
         # Get records from DB.
         scene_rec = self.nusc.get('scene', scene_token)
@@ -1667,7 +1667,7 @@ class NuScenesExplorer:
                                                                                 box_vis_level=BoxVisibility.ANY)
 
                     # Load and render.
-                    if not osp.exists(impath):
+                    if not exists(impath):
                         raise Exception('Error: Missing image %s' % impath)
                     im = cv2.imread(impath)
                     for box in boxes:
@@ -1724,7 +1724,7 @@ class NuScenesExplorer:
         assert channel in valid_channels, 'Error: Input channel {} not valid.'.format(channel)
 
         if out_path is not None:
-            assert osp.splitext(out_path)[-1] == '.avi'
+            assert os.path.splitext(out_path)[-1] == '.avi'
 
         # Get records from DB.
         scene_rec = self.nusc.get('scene', scene_token)
@@ -1750,7 +1750,7 @@ class NuScenesExplorer:
                                                                         box_vis_level=BoxVisibility.ANY)
 
             # Load and render.
-            if not osp.exists(impath):
+            if not exists(impath):
                 raise Exception('Error: Missing image %s' % impath)
             im = cv2.imread(impath)
             for box in boxes:
@@ -1992,7 +1992,7 @@ class NuScenesExplorer:
         assert imsize[0] / imsize[1] == 16 / 9, 'Error: Aspect ratio should be 16/9.'
 
         if lidarseg_preds_folder:
-            assert(os.path.isdir(lidarseg_preds_folder)), \
+            assert(isdir(lidarseg_preds_folder)), \
                 'Error:  The lidarseg predictions folder ({}) does not exist.'.format(lidarseg_preds_folder)
 
         save_as_vid = False
@@ -2000,7 +2000,7 @@ class NuScenesExplorer:
             assert render_mode in ['video', 'image'], 'Error: For the renderings to be saved to {}, either `video` ' \
                                                       'or `image` must be specified for render_mode. {} is ' \
                                                       'not a valid mode.'.format(out_folder, render_mode)
-            assert os.path.isdir(out_folder), 'Error: {} does not exist.'.format(out_folder)
+            assert isdir(out_folder), 'Error: {} does not exist.'.format(out_folder)
             if render_mode == 'video':
                 save_as_vid = True
 
@@ -2024,7 +2024,7 @@ class NuScenesExplorer:
             name = None
 
         if save_as_vid:
-            out_path = os.path.join(out_folder, scene_record['name'] + '_' + channel + '.avi')
+            out_path = join_path(out_folder, scene_record['name'] + '_' + channel + '.avi')
             fourcc = cv2.VideoWriter_fourcc(*'MJPG')
             out = cv2.VideoWriter(out_path, fourcc, freq, imsize)
         else:
@@ -2045,9 +2045,9 @@ class NuScenesExplorer:
             pointsensor_token = sample_record['data']['LIDAR_TOP']
             if lidarseg_preds_folder:
                 if show_panoptic:
-                    lidarseg_preds_bin_path = osp.join(lidarseg_preds_folder, pointsensor_token + '_panoptic.npz')
+                    lidarseg_preds_bin_path = join_path(lidarseg_preds_folder, pointsensor_token + '_panoptic.npz')
                 else:
-                    lidarseg_preds_bin_path = osp.join(lidarseg_preds_folder, pointsensor_token + '_lidarseg.bin')
+                    lidarseg_preds_bin_path = join_path(lidarseg_preds_folder, pointsensor_token + '_lidarseg.bin')
             else:
                 lidarseg_preds_bin_path = None
 
@@ -2079,7 +2079,7 @@ class NuScenesExplorer:
             if save_as_vid:
                 out.write(mat)
             elif not no_points_in_mat and out_folder:
-                cv2.imwrite(os.path.join(out_folder, filename), mat)
+                cv2.imwrite(join_path(out_folder, filename), mat)
             else:
                 pass
 
@@ -2130,7 +2130,7 @@ class NuScenesExplorer:
         assert imsize[0] / imsize[1] == 16 / 9, "Aspect ratio should be 16/9."
 
         if lidarseg_preds_folder:
-            assert(os.path.isdir(lidarseg_preds_folder)), \
+            assert(isdir(lidarseg_preds_folder)), \
                 'Error: The lidarseg predictions folder ({}) does not exist.'.format(lidarseg_preds_folder)
 
         # Get records from DB.
@@ -2166,7 +2166,7 @@ class NuScenesExplorer:
 
         if out_path:
             path_to_file, filename = os.path.split(out_path)
-            assert os.path.isdir(path_to_file), 'Error: {} does not exist.'.format(path_to_file)
+            assert isdir(path_to_file), 'Error: {} does not exist.'.format(path_to_file)
             assert os.path.splitext(filename)[-1] == '.avi', 'Error: Video can only be saved in .avi format.'
             fourcc = cv2.VideoWriter_fourcc(*'MJPG')
             out = cv2.VideoWriter(out_path, fourcc, freq, slate.shape[1::-1])
@@ -2188,9 +2188,9 @@ class NuScenesExplorer:
                 # Determine whether to render lidarseg points from ground truth or predictions.
                 if lidarseg_preds_folder:
                     if show_panoptic:
-                        lidarseg_preds_bin_path = osp.join(lidarseg_preds_folder, pointsensor_token + '_panoptic.npz')
+                        lidarseg_preds_bin_path = join_path(lidarseg_preds_folder, pointsensor_token + '_panoptic.npz')
                     else:
-                        lidarseg_preds_bin_path = osp.join(lidarseg_preds_folder, pointsensor_token + '_lidarseg.bin')
+                        lidarseg_preds_bin_path = join_path(lidarseg_preds_folder, pointsensor_token + '_lidarseg.bin')
                 else:
                     lidarseg_preds_bin_path = None
 

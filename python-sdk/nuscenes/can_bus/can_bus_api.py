@@ -7,6 +7,7 @@ import os
 import re
 import warnings
 from typing import Dict, List, Tuple, Union
+from vqasynth.utils.io import open, join_path, isdir
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,8 +29,8 @@ class NuScenesCanBus:
         :param max_misalignment: Maximum distance in m that any pose is allowed to be away from the route.
         """
         # Check that folder exists.
-        self.can_dir = os.path.join(dataroot, 'can_bus')
-        if not os.path.isdir(self.can_dir):
+        self.can_dir = join_path(dataroot, 'can_bus')
+        if not isdir(self.can_dir):
             raise Exception('Error: CAN bus directory not found: %s. Please download it from '
                             'https://www.nuscenes.org/download' % self.can_dir)
 
@@ -236,7 +237,7 @@ class NuScenesCanBus:
                     warnings.warn('Warning: %s does not have any vehicle_monitor messages!')
 
         # Load messages.
-        message_path = os.path.join(self.can_dir, '%s_%s.json' % (scene_name, message_name))
+        message_path = join_path(self.can_dir, '%s_%s.json' % (scene_name, message_name))
         with open(message_path, 'r') as f:
             messages = json.load(f)
         assert type(messages) in [list, dict]

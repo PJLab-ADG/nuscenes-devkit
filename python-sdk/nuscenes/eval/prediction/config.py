@@ -3,6 +3,7 @@
 import json
 import os
 from typing import List, Dict, Any
+from vqasynth.utils.io import open, exists, join_path
 
 from nuscenes.eval.prediction.metrics import Metric, deserialize_metric
 from nuscenes.prediction import PredictHelper
@@ -46,8 +47,8 @@ def load_prediction_config(helper: PredictHelper, config_name: str = 'predict_20
     :return: PredictionConfig.
     """
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    cfg_path = os.path.join(this_dir, "configs", config_name)
-    assert os.path.exists(cfg_path), f'Requested unknown configuration {cfg_path}'
+    cfg_path = join_path(this_dir, "configs", config_name)
+    assert exists(cfg_path), f'Requested unknown configuration {cfg_path}'
 
     # Load config file and deserialize it.
     with open(cfg_path, 'r') as f:

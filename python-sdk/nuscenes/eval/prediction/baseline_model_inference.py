@@ -5,7 +5,8 @@
 
 import argparse
 import json
-import os
+
+from vqasynth.utils.io import open, join_path
 
 from nuscenes import NuScenes
 from nuscenes.eval.prediction.config import load_prediction_config
@@ -38,8 +39,8 @@ def main(version: str, data_root: str,
         cv_preds.append(cv_heading(token).serialize())
         oracle_preds.append(oracle(token).serialize())
 
-    json.dump(cv_preds, open(os.path.join(output_dir, "cv_preds.json"), "w"))
-    json.dump(oracle_preds, open(os.path.join(output_dir, "oracle_preds.json"), "w"))
+    json.dump(cv_preds, open(join_path(output_dir, "cv_preds.json"), "w"))
+    json.dump(oracle_preds, open(join_path(output_dir, "oracle_preds.json"), "w"))
 
 
 if __name__ == "__main__":
